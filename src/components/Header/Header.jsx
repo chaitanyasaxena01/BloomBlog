@@ -1,4 +1,3 @@
-// eslint-disable-next-line no-unused-vars
 import React from 'react'
 import {Container, Logo, LogoutBtn} from '../index'
 import { Link } from 'react-router-dom'
@@ -39,22 +38,21 @@ function Header() {
 
 
   return (
-    <header className='py-3 shadow bg-gray-500'>
+    <header className='py-4 shadow-md bg-white sticky top-0 z-50'>
       <Container>
-        <nav className='flex'>
-          <div className='mr-4'>
-            <Link to='/'>
-              <Logo width='70px'   />
-
-              </Link>
+        <nav className='flex items-center justify-between'>
+          <div className='flex items-center'>
+            <Link to='/' className='transition-transform hover:scale-105'>
+              <Logo width='70px' />
+            </Link>
           </div>
-          <ul className='flex ml-auto'>
+          <ul className='flex items-center space-x-1'>
             {navItems.map((item) => 
             item.active ? (
               <li key={item.name}>
                 <button
                 onClick={() => navigate(item.slug)}
-                className='inline-bock px-6 py-2 duration-200 hover:bg-blue-100 rounded-full'
+                className='inline-block px-4 py-2 font-medium text-secondary-700 transition-all duration-200 hover:bg-primary-50 hover:text-primary-600 rounded-lg'
                 >{item.name}</button>
               </li>
             ) : null
