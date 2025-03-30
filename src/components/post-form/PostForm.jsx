@@ -1,7 +1,8 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Input, RTE, Select } from "..";
-import appwriteService from "../../appwrite/config";
+import databaseService from "../../lib/db";
+import storageService from "../../lib/storage";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
@@ -18,34 +19,76 @@ export default function PostForm({ post }) {
     const navigate = useNavigate();
     const userData = useSelector((state) => state.auth.userData);
 
+    const [error, setError] = useState("");
+    
     const submit = async (data) => {
-        if (post) {
-            const file = data.image[0] ? await appwriteService.uploadFile(data.image[0]) : null;
+        try {
+            setError(""); // Clear any previous errors
+            console.log('Form data:', data);
+            if (post) {
+                console.log('Updating existing post:', post.$id);
+                const file = data.image[0] ? await storageService.uploadFile(data.image[0]) : null;
+                console.log('File upload result:', file);
+                
+                if (file === false) {
+                    setError("Failed to upload image. Please make sure you are logged in and try again.");
+                    return;
+                }
 
-            if (file) {
-                appwriteService.deleteFile(post.featuredImage);
-            }
+                if (file) {
+                    console.log('Deleting old featured image:', post.featuredImage);
+                    await storageService.deleteFile(post.featuredImage);
+                }
 
-            const dbPost = await appwriteService.updatePost(post.$id, {
-                ...data,
-                featuredImage: file ? file.$id : undefined,
-            });
-
-            if (dbPost) {
-                navigate(`/post/${dbPost.$id}`);
-            }
-        } else {
-            const file = await appwriteService.uploadFile(data.image[0]);
-
-            if (file) {
-                const fileId = file.$id;
-                data.featuredImage = fileId;
-                const dbPost = await appwriteService.createPost({ ...data, userId: userData.$id });
+                const updateData = {
+                    ...data,
+                    featuredImage: file ? file.$id : undefined,
+                };
+                console.log('Update data:', updateData);
+                const dbPost = await databaseService.updatePost(post.slug, updateData);
+                console.log('Update result:', dbPost);
 
                 if (dbPost) {
                     navigate(`/post/${dbPost.$id}`);
                 }
+            } else {
+                if (!data.image || !data.image[0]) {
+                    console.error('Featured image is required');
+                    setError("Featured image is required");
+                    return;
+                }
+                
+                console.log('Uploading new file:', data.image[0]);
+                const file = await storageService.uploadFile(data.image[0]);
+                console.log('File upload result:', file);
+                
+                if (file === false) {
+                    setError("Failed to upload image. Please make sure you are logged in and try again.");
+                    return;
+                }
+
+                if (file) {
+                    const fileId = file.$id;
+                    data.featuredImage = fileId;
+                    const createData = { 
+                        ...data, 
+                        userId: userData?.$id 
+                    };
+                    console.log('Create post data:', createData);
+                    const dbPost = await databaseService.createPost(createData);
+                    console.log('Create post result:', dbPost);
+
+                    if (dbPost) {
+                        navigate(`/post/${dbPost.$id}`);
+                    }
+                }
             }
+        } catch (error) {
+            console.error('Error submitting post:', error);
+            console.error('Error details:', {
+                message: error.message,
+                stack: error.stack
+            });
         }
     };
 
@@ -72,6 +115,7 @@ export default function PostForm({ post }) {
 
     return (
         <form onSubmit={handleSubmit(submit)} className="flex flex-wrap">
+            {error && <div className="w-full mb-4 p-2 bg-red-100 text-red-600 rounded-lg">{error}</div>}
             <div className="w-2/3 px-2">
                 <Input
                     label="Title :"
@@ -101,7 +145,7 @@ export default function PostForm({ post }) {
                 {post && (
                     <div className="w-full mb-4">
                         <img
-                            src={appwriteService.getFilePreview(post.featuredImage)}
+                            src={storageService.getFilePreview(post.featuredImage)}
                             alt={post.title}
                             className="rounded-lg"
                         />

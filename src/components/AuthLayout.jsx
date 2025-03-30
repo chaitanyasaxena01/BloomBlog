@@ -1,31 +1,31 @@
 import React, {useEffect, useState} from 'react'
 import {useSelector} from 'react-redux'
 import {useNavigate} from 'react-router-dom'
+import { useAuth } from '@clerk/clerk-react'
 
 export default function Protected({children, authentication = true}) {
-
     const navigate = useNavigate()
     const [loader, setLoader] = useState(true)
     const authStatus = useSelector(state => state.auth.status)
+    const { isLoaded, isSignedIn } = useAuth()
 
     useEffect(() => {
-        //TODO: make it more easy to understand
-
-        // if (authStatus ===true){
-        //     navigate("/")
-        // } else if (authStatus === false) {
-        //     navigate("/login")
-        // }
+        // Wait for Clerk to load
+        if (!isLoaded) {
+            return;
+        }
         
-        //let authValue = authStatus === true ? true : false
-
-        if(authentication && authStatus !== authentication){
+        // Check if user should be authenticated
+        if (authentication && !isSignedIn) {
             navigate("/login")
-        } else if(!authentication && authStatus !== authentication){
+        } 
+        // Check if user should NOT be authenticated (login/signup pages)
+        else if (!authentication && isSignedIn) {
             navigate("/")
         }
+        
         setLoader(false)
-    }, [authStatus, navigate, authentication])
+    }, [isLoaded, isSignedIn, authStatus, navigate, authentication])
 
   return loader ? <h1>Loading...</h1> : <>{children}</>
 }

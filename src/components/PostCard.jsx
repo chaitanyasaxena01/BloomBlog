@@ -1,5 +1,5 @@
 import React from 'react'
-import appwriteService from "../appwrite/config"
+import storageService from "../lib/storage"
 import {Link} from 'react-router-dom'
 
 function PostCard({$id, title, featuredImage}) {
@@ -9,7 +9,7 @@ function PostCard({$id, title, featuredImage}) {
         <div className='w-full bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 hover:translate-y-[-5px]'>
             <div className='w-full justify-center mb-4 overflow-hidden rounded-xl'>
                 <img 
-                  src={appwriteService.getFilePreview(featuredImage)} 
+                  src={storageService.getFilePreview(featuredImage)} 
                   alt={title}
                   className='rounded-xl w-full h-48 object-cover hover:scale-105 transition-transform duration-300' 
                 />

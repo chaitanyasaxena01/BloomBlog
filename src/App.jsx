@@ -1,26 +1,39 @@
 import React, { useState, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import './App.css'
-import authService from "./appwrite/auth"
 import {login, logout} from "./store/authSlice"
 import { Footer, Header } from './components'
 import { Outlet } from 'react-router-dom'
+import { useAuth, useUser } from '@clerk/clerk-react'
 
 function App() {
   const [loading, setLoading] = useState(true)
   const dispatch = useDispatch()
+  const { isLoaded, userId, sessionId } = useAuth()
+  const { user } = useUser()
 
   useEffect(() => {
-    authService.getCurrentUser()
-    .then((userData) => {
-      if (userData) {
-        dispatch(login({userData}))
-      } else {
-        dispatch(logout())
+    // Wait for Clerk to load
+    if (!isLoaded) {
+      return;
+    }
+    
+    // Check if user is authenticated with Clerk
+    if (userId && user) {
+      // User is logged in, update Redux store
+      const userData = {
+        id: userId,
+        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User',
+        email: user.primaryEmailAddress?.emailAddress
       }
-    })
-    .finally(() => setLoading(false))
-  }, [])
+      dispatch(login({userData}))
+    } else {
+      // User is not logged in
+      dispatch(logout())
+    }
+    
+    setLoading(false)
+  }, [isLoaded, userId, user, dispatch])
   
   return !loading ? (
     <div className='min-h-screen flex flex-wrap content-between bg-gradient-to-b from-secondary-50 to-secondary-100'>

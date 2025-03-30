@@ -3,28 +3,53 @@ import {Link, useNavigate} from 'react-router-dom'
 import { login as authLogin } from '../store/authSlice'
 import {Button, Input, Logo} from "./index"
 import {useDispatch} from "react-redux"
-import authService from "../appwrite/auth"
 import {useForm} from "react-hook-form"
+import { useSignIn } from '@clerk/clerk-react'
 
 function Login() {
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const {register, handleSubmit} = useForm()
     const [error, setError] = useState("")
+    const { isLoaded, signIn, setActive } = useSignIn()
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     const login = async(data) => {
+        if (!isLoaded) {
+            return;
+        }
+        
         setError("")
+        setIsSubmitting(true)
+        
         try {
-            const session = await authService.login(data)
-            if (session) {
-                const userData = await authService.getCurrentUser()
-                if(userData) {
-                    dispatch(authLogin({userData}))
-                    navigate("/dashboard")
+            // Start the sign in process using Clerk
+            const result = await signIn.create({
+                identifier: data.email,
+                password: data.password,
+            })
+            
+            // Set the user session as active
+            if (result.status === "complete") {
+                await setActive({ session: result.createdSessionId })
+                
+                // Update Redux store with user data
+                const userData = {
+                    id: result.createdUserId,
+                    email: data.email,
+                    name: "User" // Clerk doesn't return name in signIn, we could fetch it separately
                 }
+                
+                dispatch(authLogin({userData}))
+                navigate("/dashboard")
+            } else {
+                // Handle incomplete authentication (e.g., 2FA required)
+                setError("Authentication incomplete. Please complete all required steps.")
             }
         } catch (error) {
-            setError(error.message)
+            setError(error.message || "An error occurred during login")
+        } finally {
+            setIsSubmitting(false)
         }
     }
 

@@ -1,28 +1,51 @@
 import React, {useState} from 'react'
-import authService from '../appwrite/auth'
-import {Link ,useNavigate} from 'react-router-dom'
+import {Link, useNavigate} from 'react-router-dom'
 import {login} from '../store/authSlice'
 import {Button, Input, Logo} from './index.js'
 import {useDispatch} from 'react-redux'
 import {useForm} from 'react-hook-form'
+import { useSignUp } from '@clerk/clerk-react'
 
 function Signup() {
     const navigate = useNavigate()
     const [error, setError] = useState("")
     const dispatch = useDispatch()
     const {register, handleSubmit} = useForm()
+    const { isLoaded, signUp, setActive } = useSignUp()
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     const create = async(data) => {
+        if (!isLoaded) {
+            return;
+        }
+        
         setError("")
+        setIsSubmitting(true)
+        
         try {
-            const userData = await authService.createAccount(data)
-            if (userData) {
-                const userData = await authService.getCurrentUser()
-                if(userData) dispatch(login(userData));
-                navigate("/dashboard")
+            // Start the sign up process using Clerk
+            await signUp.create({
+                emailAddress: data.email,
+                password: data.password,
+                firstName: data.name
+            })
+            
+            // Set the user session as active
+            await setActive({ session: signUp.createdSessionId })
+            
+            // Update Redux store with user data
+            const userData = {
+                id: signUp.createdUserId,
+                name: data.name,
+                email: data.email
             }
+            
+            dispatch(login({userData}))
+            navigate("/dashboard")
         } catch (error) {
-            setError(error.message)
+            setError(error.message || "An error occurred during signup")
+        } finally {
+            setIsSubmitting(false)
         }
     }
 

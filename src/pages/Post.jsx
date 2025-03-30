@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import appwriteService from "../appwrite/config";
+import databaseService from "../lib/db";
+import storageService from "../lib/storage";
 import { Button, Container } from "../components";
 import parse from "html-react-parser";
 import { useSelector } from "react-redux";
@@ -16,7 +17,7 @@ export default function Post() {
 
     useEffect(() => {
         if (slug) {
-            appwriteService.getPost(slug).then((post) => {
+            databaseService.getPost(slug).then((post) => {
                 if (post) setPost(post);
                 else navigate("/");
             });
@@ -24,9 +25,9 @@ export default function Post() {
     }, [slug, navigate]);
 
     const deletePost = () => {
-        appwriteService.deletePost(post.$id).then((status) => {
+        databaseService.deletePost(post.slug).then((status) => {
             if (status) {
-                appwriteService.deleteFile(post.featuredImage);
+                storageService.deleteFile(post.featuredImage);
                 navigate("/");
             }
         });
@@ -37,7 +38,7 @@ export default function Post() {
             <Container>
                 <div className="w-full flex justify-center mb-6 relative border rounded-xl p-2 shadow-md overflow-hidden">
                     <img
-                        src={appwriteService.getFilePreview(post.featuredImage)}
+                        src={storageService.getFilePreview(post.featuredImage)}
                         alt={post.title}
                         className="rounded-xl w-full max-h-[500px] object-cover"
                     />

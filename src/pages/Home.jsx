@@ -1,14 +1,14 @@
 import React, {useEffect, useState} from 'react'
-import appwriteService from "../appwrite/config";
 import {Container, PostCard} from '../components'
+import databaseService from "../lib/db";
 
 function Home() {
     const [posts, setPosts] = useState([])
 
     useEffect(() => {
-        appwriteService.getPosts().then((posts) => {
+        databaseService.getPosts().then((posts) => {
             if (posts) {
-                setPosts(posts.documents)
+                setPosts(posts)
             }
         })
     }, [])
