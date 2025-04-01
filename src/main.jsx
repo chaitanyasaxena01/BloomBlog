@@ -44,6 +44,22 @@ const router = createBrowserRouter([
             ),
         },
         {
+            path: "/signup/verify-email-address",
+            element: (
+                <AuthLayout authentication={false}>
+                    <Signup />
+                </AuthLayout>
+            ),
+        },
+        {
+            path: "/login/factor-one",
+            element: (
+                <AuthLayout authentication={false}>
+                    <Login />
+                </AuthLayout>
+            ),
+        },
+        {
             path: "/all-posts",
             element: (
                 <AuthLayout authentication>

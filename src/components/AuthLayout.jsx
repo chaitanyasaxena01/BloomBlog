@@ -10,22 +10,35 @@ export default function Protected({children, authentication = true}) {
     const { isLoaded, isSignedIn } = useAuth()
 
     useEffect(() => {
-        // Wait for Clerk to load
         if (!isLoaded) {
-            return;
+            setLoader(true)
+            return
         }
-        
-        // Check if user should be authenticated
-        if (authentication && !isSignedIn) {
-            navigate("/login")
-        } 
-        // Check if user should NOT be authenticated (login/signup pages)
-        else if (!authentication && isSignedIn) {
-            navigate("/")
+
+        const checkAuth = async () => {
+            try {
+                if (authentication && !isSignedIn) {
+                    navigate("/login")
+                } else if (!authentication && isSignedIn) {
+                    navigate("/")
+                }
+            } catch (error) {
+                console.error('Authentication error:', error)
+            } finally {
+                setLoader(false)
+            }
         }
-        
-        setLoader(false)
+
+        checkAuth()
     }, [isLoaded, isSignedIn, authStatus, navigate, authentication])
 
-  return loader ? <h1>Loading...</h1> : <>{children}</>
+    if (!isLoaded || loader) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+        )
+    }
+
+    return <>{children}</>
 }

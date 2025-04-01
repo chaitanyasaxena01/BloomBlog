@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button, Input, RTE, Select } from "..";
-import databaseService from "../../lib/db";
+import apiService from "../../lib/api";
 import storageService from "../../lib/storage";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -72,10 +72,10 @@ export default function PostForm({ post }) {
                     data.featuredImage = fileId;
                     const createData = { 
                         ...data, 
-                        userId: userData?.$id 
+                        userId: userData?.id 
                     };
                     console.log('Create post data:', createData);
-                    const dbPost = await databaseService.createPost(createData);
+                    const dbPost = await apiService.createPost(createData);
                     console.log('Create post result:', dbPost);
 
                     if (dbPost) {

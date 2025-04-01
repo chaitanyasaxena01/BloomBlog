@@ -1,0 +1,20 @@
+{
+  "name": "bloomblog-server",
+  "version": "1.0.0",
+  "description": "Server for BloomBlog application",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.10.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3",
+    "prisma": "^6.5.0"
+  }
+}
